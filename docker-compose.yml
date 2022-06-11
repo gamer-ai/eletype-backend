@@ -1,0 +1,12 @@
+version: '3.3'
+services:
+  eletype-server:
+    build:
+      context: server/
+      dockerfile: Dockerfile
+    image: eletype_server
+    ports:
+      - "4000:4000"
+    container_name: eletype_server
+    environment:
+      FLASK_DEBUG: 1
