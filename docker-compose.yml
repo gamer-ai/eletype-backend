@@ -9,4 +9,16 @@ services:
       - "4000:4000"
     container_name: eletype_server
     environment:
-      FLASK_DEBUG: 1
+      MONGO_USERNAME: test
+      MONGO_PASSWORD: test
+      MONGO_HOSTNAME: mongodb
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test
+      MONGO_INITDB_ROOT_PASSWORD: test
+    volumes:
+      - /var/docker-mongodb:/var/lib/mongodb
