@@ -1,13 +1,13 @@
 version: '3.3'
 services:
-  eletype-server:
+  eletypes-server:
     build:
       context: server/
       dockerfile: Dockerfile
-    image: eletype_server
+    image: eletypes_server
     ports:
-      - "4000:4000"
-    container_name: eletype_server
+      - "8080:4000"
+    container_name: eletypes_server
     environment:
       MONGO_USERNAME: test
       MONGO_PASSWORD: test
