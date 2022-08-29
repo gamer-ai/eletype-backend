@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     image: eletypes_server
     ports:
-      - "8080:4000"
+      - "127.0.0.1:8080:4000"
     container_name: eletypes_server
     environment:
       MONGO_USERNAME: test
@@ -16,7 +16,7 @@ services:
     image: mongo:5.0
     container_name: mongodb
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: test
       MONGO_INITDB_ROOT_PASSWORD: test
