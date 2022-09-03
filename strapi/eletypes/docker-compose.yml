@@ -23,7 +23,7 @@ services:
       - ./yarn.lock:/opt/yarn.lock # Replace with package-lock.json if using npm
       - ./.env:/opt/app/.env
     ports:
-      - "1337:1337"
+      - "127.0.0.1:1337:1337"
     networks:
       - strapi
     depends_on:
@@ -41,7 +41,7 @@ services:
       MYSQL_USER: ${DATABASE_USERNAME}
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - '3306:3306'
+      - '127.0.0.1:3306:3306'
     volumes:
       - strapi-data:/var/lib/mysql #using a volume
       #- ./data:/var/lib/mysql # if you want to use a bind folder
