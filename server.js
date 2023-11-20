@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
-const cors = require("cors")
+const cors = require("cors");
+const {body, validationResult} = require("express-validator");
 const port = 8000;
 
 app.use(express.json());
@@ -15,10 +16,21 @@ app.use(cors({
   crendentials: true
 }));
 
-app.post("/api/login", (req, res) => {
-  const {email, password} = req.body;
+app.post("/api/login", [
+  body('email')
+  .isEmail()
+  .withMessage("Invalid email format!"),
+  body('password')
+  .isLength({
+    min: 8
+  })
+  .withMessage('Password must be atleast 8 characters long!')
+], (req, res) => {
+  const errors = validationResult(req);
 
-  res.status(200).json({ success: true });
+  if(!errors.isEmpty()) return res.json({ success: false, errors: errors.array()});
+  
+  return res.json({ success: true, errors: []});
 });
 
 app.listen(port, () => {
