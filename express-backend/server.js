@@ -6,6 +6,10 @@ const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
 const { User } = require("./model/model.js");
 const e = require("express");
+const passport = require("passport");
+const session = require("express-session");
+const flash = require("express-flash");
+const jwt = require("jsonwebtoken");
 const port = 8000;
 
 app.use(express.json());
@@ -14,6 +18,16 @@ app.use(
     extended: true,
   })
 );
+app.use(flash());
+app.use(
+  session({
+    secret: "myhobbyiscalisthenic",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(
   cors({
@@ -132,6 +146,8 @@ app.post(
     const errors = validationResult(req);
     const { username, email, password, submit = false } = req.body;
 
+    const user = { name: username };
+
     if (!errors.isEmpty())
       return res.json({
         success: false,
@@ -140,13 +156,29 @@ app.post(
       });
 
     if (submit) {
+      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
       res.json({ success: true, errors: [] });
-      console.log("Login Success!");
     } else {
-      res.json({ success: true, errors: [] });
+      res.json({ success: true, errors: [], accessToken });
     }
   }
 );
+
+app.get('/', (req, res) => {
+  res.json({authenticatedUser: false});
+})
+
+function authenticateUser(req, res, next) {
+  const authHeader = req.headers["autorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token === null) return res.sendStatus(400);
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
 
 app.listen(port, () => {
   console.log("Server is running on port", port);
