@@ -6,7 +6,6 @@ const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
 const { User } = require("./model/model.js");
 const e = require("express");
-const passport = require("passport");
 const session = require("express-session");
 const flash = require("express-flash");
 const jwt = require("jsonwebtoken");
@@ -26,8 +25,6 @@ app.use(
     saveUninitialized: false,
   })
 );
-app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(
   cors({
@@ -144,9 +141,9 @@ app.post(
   ],
   (req, res) => {
     const errors = validationResult(req);
-    const { username, email, password, submit = false } = req.body;
+    const { email, password, submit = false } = req.body;
 
-    const user = { name: username };
+    const user = { email };
 
     if (!errors.isEmpty())
       return res.json({
@@ -155,30 +152,41 @@ app.post(
         errors: errors.array(),
       });
 
+      console.log(user)
+
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "7d",
+      });
+
     if (submit) {
-      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-      res.json({ success: true, errors: [] });
+      console.log("Login successfully!");
+      res.json({ success: true, errors: [], token });
     } else {
-      res.json({ success: true, errors: [], accessToken });
+      res.json({ success: true, errors: [], token });
     }
   }
 );
 
-app.get('/', (req, res) => {
-  res.json({authenticatedUser: false});
-})
+function authenticateToken(req, res, next) {
+  const token = req.headers["authorization"];
 
-function authenticateUser(req, res, next) {
-  const authHeader = req.headers["autorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token === null) return res.sendStatus(400);
+  if (token == null) return res.sendStatus(401);
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    console.log(err);
+
     if (err) return res.sendStatus(403);
+
     req.user = user;
+
     next();
   });
 }
+
+app.get('/isAuthorized', authenticateToken, (req, res, next) => {
+  console.log("User is authorized!");
+   res.json({authorized: true});
+})
 
 app.listen(port, () => {
   console.log("Server is running on port", port);
