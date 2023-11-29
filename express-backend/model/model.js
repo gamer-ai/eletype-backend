@@ -6,16 +6,16 @@ const userSchema = new mongoose.Schema({
   password: String,
   token: String,
   ninetySeconds: {
-    wpm: Number,
+    score: Number,
   },
   sixtySeconds: {
-    wpm: Number,
+    score: Number,
   },
   thirtySeconds: {
-    wpm: Number,
+    score: Number,
   },
   fifteenSeconds: {
-    wpm: Number,
+    score: Number,
   },
 });
 

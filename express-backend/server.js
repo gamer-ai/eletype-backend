@@ -63,7 +63,7 @@ app.post(
       }),
     body("email")
       .isEmail()
-      .withMessage("Invalid email format!")
+      .withMessage("Email should be like user@gmail.com!")
       .custom(async (value) => {
         const existingEmail = await User.findOne({ email: value });
 
@@ -81,7 +81,7 @@ app.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
-    const { username, email, password, submit = false } = req.body;
+    const { username, email, password } = req.body;
 
     if (!errors.isEmpty())
       return res.json({
@@ -90,27 +90,19 @@ app.post(
         errors: errors.array(),
       });
 
-    if (!await User.findOne({ email })) {
-      if (submit) {
-        const newUser = new User({
-          username,
-          email,
-          password,
-          token: "",
-          ninetySeconds: { wpm: 0 },
-          sixtySeconds: { wpm: 0 },
-          thirtySeconds: { wpm: 0 },
-          fifteenSeconds: { wpm: 0 },
-        });
+    await new User({
+      username,
+      email,
+      password,
+      token: "",
+      ninetySeconds: { score: 0 },
+      sixtySeconds: { score: 0 },
+      thirtySeconds: { score: 0 },
+      fifteenSeconds: { score: 0 },
+    }).save();
 
-        await newUser.save();
-        res.json({ success: true, errors: [] });
-        console.log("Sign Up Success!");
-        return;
-      } else {
-        res.json({ success: true, url: "/sign-up", errors: [] });
-      }
-    }
+    res.json({ success: true, url: "/login", errors: [], action: "sign-up" });
+    console.log("Sign Up Success!");
   }
 );
 
@@ -119,7 +111,7 @@ app.post(
   [
     body("email")
       .isEmail()
-      .withMessage("Invalid email format!")
+      .withMessage("Email should be like user@gmail.com!")
       .custom(async (value) => {
         const existingEmail = await User.findOne({ email: value });
 
@@ -163,20 +155,17 @@ app.post(
       expiresIn: "7d",
     });
 
-    if (submit) {
-      console.log("Login successfully!");
-      await User.updateOne(
-        { email },
-        {
-          $set: {
-            token,
-          },
-        }
-      );
-      res.json({ success: true, errors: [], token });
-    } else {
-      res.json({ success: true, errors: [], token });
-    }
+    console.log("Login successfully!");
+    await User.updateOne(
+      { email },
+      {
+        $set: {
+          token,
+        },
+      }
+    );
+
+    res.json({ success: true, url: "/", errors: [], token, action: "login" });
   }
 );
 
@@ -208,7 +197,7 @@ app.get("/ranking", authenticateToken, async (req, res) => {
 });
 
 app.post("/ranking", authenticateToken, async (req, res) => {
-  const { wpm, time, token } = req.body;
+  const { score, time, token } = req.body;
   let timeName;
 
   if (time === 90) {
@@ -227,23 +216,25 @@ app.post("/ranking", authenticateToken, async (req, res) => {
     timeName = "fifteenSeconds";
   }
 
-  const userWpm = await User.findOne({ token });
+  const selectedUser = await User.findOne({ token });
 
-  console.log(userWpm[timeName].wpm);
+  const oldUserScore = selectedUser[timeName].score;
+  console.log(oldUserScore)
+  console.log(score)
 
-  if (wpm > userWpm[timeName].wpm) {
+  if (score > oldUserScore) {
     await User.updateOne(
       { token },
       {
         $set: {
           [timeName]: {
-            wpm,
+            score,
           },
         },
       }
     );
   } else {
-    console.log("WPM lower than old WPM!");
+    console.log("Score lower than old score!");
   }
 
   res.json({ message: "Ranking!!" });
