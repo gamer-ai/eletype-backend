@@ -187,16 +187,42 @@ const getUSers = () => {
   return User.find();
 };
 
-app.get("/isAuthorized", authenticateToken, (req, res, next) => {
+app.get("/isAuthorized", authenticateToken, (req, res) => {
   console.log("User is authorized!");
   res.json({ authorized: true });
 });
 
-app.get("/ranking", authenticateToken, async (req, res) => {
-  return res.json({ users: (await getUSers()) || [] });
+app.get("/user-by-token/:token", async (req, res) => {
+  const token = req.params.token;
+  const { username, email } = await User.findOne({ token });
+
+  res.json({ payload: { username, email } });
 });
 
-app.post("/ranking", authenticateToken, async (req, res) => {
+app.get("/ranking", async (req, res) => {
+  const usersWithPassword = await getUSers();
+  const usersWithoutPassword = usersWithPassword.map(
+    ({
+      username,
+      email,
+      ninetySeconds,
+      sixtySeconds,
+      thirtySeconds,
+      fifteenSeconds,
+    }) => ({
+      username,
+      email,
+      ninetySeconds,
+      sixtySeconds,
+      thirtySeconds,
+      fifteenSeconds,
+    })
+  );
+
+  return res.json({ payload: usersWithoutPassword || [] });
+});
+
+app.post("/ranking", async (req, res) => {
   const { score, time, token } = req.body;
   let timeName;
 
@@ -219,23 +245,19 @@ app.post("/ranking", authenticateToken, async (req, res) => {
   const selectedUser = await User.findOne({ token });
 
   const oldUserScore = selectedUser[timeName].score;
-  console.log(oldUserScore)
-  console.log(score)
+  console.log(oldUserScore);
+  console.log(score);
 
-  if (score > oldUserScore) {
-    await User.updateOne(
-      { token },
-      {
-        $set: {
-          [timeName]: {
-            score,
-          },
+  await User.updateOne(
+    { token },
+    {
+      $set: {
+        [timeName]: {
+          score: oldUserScore + score,
         },
-      }
-    );
-  } else {
-    console.log("Score lower than old score!");
-  }
+      },
+    }
+  );
 
   res.json({ message: "Ranking!!" });
 });
