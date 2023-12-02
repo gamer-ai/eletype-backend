@@ -194,6 +194,11 @@ app.get("/isAuthorized", authenticateToken, (req, res) => {
 
 app.get("/user-by-token/:token", async (req, res) => {
   const token = req.params.token;
+
+  console.log(token)
+
+  if (token === "" || token == null) return res.json({ payload: {} });
+
   const { username, email } = await User.findOne({ token });
 
   res.json({ payload: { username, email } });
