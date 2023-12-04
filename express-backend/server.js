@@ -195,7 +195,7 @@ app.get("/isAuthorized", authenticateToken, (req, res) => {
 app.get("/user-by-token/:token", async (req, res) => {
   const token = req.params.token;
 
-  console.log(token)
+  console.log(token);
 
   if (token === "" || token == null) return res.json({ payload: {} });
 
@@ -208,6 +208,7 @@ app.get("/ranking", async (req, res) => {
   const usersWithPassword = await getUSers();
   const usersWithoutPassword = usersWithPassword.map(
     ({
+      _id,
       username,
       email,
       ninetySeconds,
@@ -215,6 +216,7 @@ app.get("/ranking", async (req, res) => {
       thirtySeconds,
       fifteenSeconds,
     }) => ({
+      _id,
       username,
       email,
       ninetySeconds,
@@ -264,7 +266,33 @@ app.post("/ranking", async (req, res) => {
     }
   );
 
-  res.json({ message: "Ranking!!" });
+  res.json({ ok: true });
+});
+
+app.get("/user-profile/:token", authenticateToken, async (req, res) => {
+  const token = req.params.token;
+
+  if (token === "" || token == null) return res.json({ payload: {} });
+
+  const {
+    username,
+    email,
+    ninetySeconds,
+    sixtySeconds,
+    thirtySeconds,
+    fifteenSeconds,
+  } = await User.findOne({ token });
+
+  res.json({
+    payload: {
+      username,
+      email,
+      ninetySeconds,
+      sixtySeconds,
+      thirtySeconds,
+      fifteenSeconds,
+    },
+  });
 });
 
 app.listen(port, () => {
