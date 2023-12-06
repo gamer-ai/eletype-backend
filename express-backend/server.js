@@ -142,7 +142,7 @@ app.post(
     const errors = validationResult(req);
     const { email, password, submit = false } = req.body;
 
-    const user = { email };
+    const user = { email, iat: Math.floor(Date.now() / 1000) };
 
     if (!errors.isEmpty())
       return res.json({
@@ -199,9 +199,13 @@ app.get("/user-by-token/:token", async (req, res) => {
 
   if (token === "" || token == null) return res.json({ payload: {} });
 
-  const { _id, username, email } = await User.findOne({ token });
+  const user = await User.findOne({ token });
 
-  res.json({ payload: { _id, username, email } });
+  if (!user) return res.json({ payload: { success: false } });
+
+  const { _id, username, email, token: { userToken} } = user;
+
+  res.json({ payload: { _id, username, email, token: userToken, success: true } });
 });
 
 app.get("/ranking", async (req, res) => {
